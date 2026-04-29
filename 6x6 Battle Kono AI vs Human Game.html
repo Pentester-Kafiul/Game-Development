@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battle Kono AI — Project Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #101018;
+    --card: #14141f;
+    --card2: #1a1a28;
+    --border: #2a2a3a;
+    --fg: #e8e8f0;
+    --muted: #7878a0;
+    --accent: #ffd700;
+    --accent-dim: rgba(255,215,0,0.12);
+    --human: #448aff;
+    --human-bg: #1a237e;
+    --ai: #ff5252;
+    --ai-bg: #4a148c;
+    --valid: #00e676;
+    --selected: #ffd700;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--bg);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── WATERMARK ── */
+  .watermark {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .watermark-inner {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    transform: rotate(-30deg);
+    transform-origin: center center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 80px;
+  }
+  .watermark-row {
+    display: flex;
+    gap: 120px;
+    white-space: nowrap;
+  }
+  .watermark-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 52px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.018);
+    letter-spacing: 12px;
+    text-transform: uppercase;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,215,0,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,215,0,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .bg-glow {
+    position: fixed; border-radius: 50%; filter: blur(120px);
+    pointer-events: none; z-index: 0;
+  }
+  .bg-glow.g1 { width:500px;height:500px;background:rgba(68,138,255,0.07);top:-100px;left:-100px;animation:floatG 12s ease-in-out infinite alternate; }
+  .bg-glow.g2 { width:400px;height:400px;background:rgba(255,82,82,0.05);bottom:-50px;right:-50px;animation:floatG 10s ease-in-out infinite alternate-reverse; }
+  .bg-glow.g3 { width:300px;height:300px;background:rgba(255,215,0,0.04);top:40%;left:50%;animation:floatG 14s ease-in-out infinite alternate; }
+
+  @keyframes floatG { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(40px,30px) scale(1.2)} }
+
+  .slide-container { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:0 24px; }
+
+  section { min-height:100vh; display:flex; align-items:center; padding:60px 0; }
+  section.col-section { flex-direction:column; gap:10px; }
+
+  /* ── FRONT ── */
+  .front-slide { flex-direction:column; text-align:center; gap:20px; justify-content:center; }
+  .front-institution { font-size:13px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); animation:fadeUp .8s ease both; }
+  .front-title {
+    font-family:'Rajdhani',sans-serif; font-size:clamp(52px,9vw,110px); font-weight:700;
+    line-height:1; letter-spacing:-3px; animation:fadeUp .8s .15s ease both;
+  }
+  .front-title .wb { color:var(--ai); }
+  .front-title .wk { color:var(--accent); }
+  .front-title .wa { color:var(--human); }
+  .front-subtitle { font-size:clamp(15px,2.2vw,20px); color:var(--muted); font-weight:300; max-width:550px; margin:0 auto; animation:fadeUp .8s .3s ease both; }
+
+  .front-dev { animation:fadeUp .8s .45s ease both; margin-top:8px; }
+  .front-dev-card {
+    display:inline-flex; align-items:center; gap:16px;
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:20px 36px; transition:all .35s; position:relative; overflow:hidden;
+  }
+  .front-dev-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:var(--accent); opacity:.7;
+  }
+  .front-dev-card:hover { border-color:var(--accent); transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,.3); }
+  .front-dev-avatar {
+    width:48px; height:48px; border-radius:50%;
+    background:linear-gradient(135deg, var(--human), var(--accent));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; color:#000;
+  }
+  .front-dev-info { text-align:left; }
+  .front-dev-name { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; }
+  .front-dev-role { font-size:11px; color:var(--accent); font-weight:600; text-transform:uppercase; letter-spacing:2px; margin-top:2px; }
+
+  .front-divider { width:60px; height:2px; background:var(--accent); border-radius:2px; margin:8px auto 0; animation:fadeUp .8s .6s ease both; }
+
+  /* ── HERO ── */
+  .hero { text-align:center; flex-direction:column; gap:24px; position:relative; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; background:var(--accent-dim); border:1px solid rgba(255,215,0,.25); color:var(--accent); padding:6px 18px; border-radius:999px; font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; animation:fadeUp .8s ease both; }
+  .hero h1 { font-family:'Rajdhani',sans-serif; font-size:clamp(48px,8vw,96px); font-weight:700; line-height:1; letter-spacing:-2px; animation:fadeUp .8s .15s ease both; }
+  .hero h1 .word-battle { color:var(--ai); }
+  .hero h1 .word-kono { color:var(--accent); }
+  .hero h1 .word-ai { color:var(--human); }
+  .hero-sub { font-size:clamp(16px,2.5vw,22px); color:var(--muted); font-weight:300; max-width:600px; margin:0 auto; animation:fadeUp .8s .3s ease both; }
+  .hero-tags { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; animation:fadeUp .8s .45s ease both; }
+  .hero-tag { background:var(--card); border:1px solid var(--border); padding:8px 16px; border-radius:8px; font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; transition:all .3s; }
+  .hero-tag:hover { border-color:var(--accent); background:var(--accent-dim); transform:translateY(-2px); }
+  .hero-tag i { font-size:14px; }
+
+  .scroll-hint { position:absolute; bottom:30px; left:50%; transform:translateX(-50%); color:var(--muted); font-size:12px; letter-spacing:2px; text-transform:uppercase; display:flex; flex-direction:column; align-items:center; gap:8px; animation:bounce 2s ease infinite; }
+  .scroll-hint i { font-size:16px; }
+  @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+
+  .section-label { font-size:12px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+  .section-title { font-family:'Rajdhani',sans-serif; font-size:clamp(32px,5vw,52px); font-weight:700; line-height:1.1; margin-bottom:16px; }
+  .section-desc { color:var(--muted); font-size:15px; max-width:500px; }
+
+  /* ── BOARD ── */
+  .showcase { gap:60px; }
+  .showcase-left { flex:1; }
+  .showcase-right { flex:1; display:flex; justify-content:center; align-items:center; }
+  .board-wrapper { position:relative; padding:20px; background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 0 60px rgba(255,215,0,.04),0 20px 60px rgba(0,0,0,.4); }
+  .board-wrapper::before { content:''; position:absolute; inset:-1px; border-radius:17px; background:linear-gradient(135deg,rgba(255,215,0,.2),transparent 40%,transparent 60%,rgba(68,138,255,.2)); z-index:-1; }
+  .board-header { text-align:center; margin-bottom:12px; }
+  .board-header span { font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14px; color:var(--muted); }
+  .board { display:grid; grid-template-columns:repeat(6,56px); grid-template-rows:repeat(6,56px); gap:4px; }
+  .cell { width:56px;height:56px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:bold;transition:all .3s;position:relative; }
+  .cell.empty { background:#1e1e2f; }
+  .cell.human { background:var(--human-bg); color:var(--human); }
+  .cell.ai-piece { background:var(--ai-bg); color:var(--ai); }
+  .cell.selected-cell { background:var(--selected)!important; color:#000!important; box-shadow:0 0 20px rgba(255,215,0,.4); animation:pulseG 1.5s ease infinite; }
+  .cell.valid-cell { background:var(--valid)!important; color:#000!important; box-shadow:0 0 15px rgba(0,230,118,.3); animation:pulseGr 1.5s ease infinite; }
+  @keyframes pulseG { 0%,100%{box-shadow:0 0 20px rgba(255,215,0,.3)} 50%{box-shadow:0 0 30px rgba(255,215,0,.6)} }
+  @keyframes pulseGr { 0%,100%{box-shadow:0 0 15px rgba(0,230,118,.2)} 50%{box-shadow:0 0 25px rgba(0,230,118,.5)} }
+  .board-footer { margin-top:12px; display:flex; justify-content:space-between; align-items:center; }
+  .board-score { font-size:13px; font-weight:600; }
+  .board-score .hs { color:var(--human); }
+  .board-score .as { color:var(--ai); }
+  .board-timer { font-size:13px; font-weight:700; color:var(--fg); background:rgba(255,255,255,.06); padding:4px 10px; border-radius:6px; }
+  .board-legend { display:flex; gap:16px; justify-content:center; margin-top:12px; font-size:11px; color:var(--muted); flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:5px; }
+  .legend-dot { width:12px; height:12px; border-radius:3px; }
+
+  /* ── RULES ── */
+  .rules-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:40px; }
+  .rule-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px; transition:all .35s; position:relative; overflow:hidden; }
+  .rule-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--card-accent,var(--accent)); opacity:0; transition:opacity .35s; }
+  .rule-card:hover { border-color:var(--card-accent,var(--accent)); transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,.3); }
+  .rule-card:hover::before { opacity:1; }
+  .rule-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:14px; }
+  .rule-card h3 { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; margin-bottom:8px; }
+  .rule-card p { font-size:13px; color:var(--muted); line-height:1.5; }
+
+  /* ── MANUAL ── */
+  .manual-container { width:100%; max-width:800px; margin:0 auto; }
+  .manual-block { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:28px 32px; margin-bottom:16px; transition:all .3s; }
+  .manual-block:hover { border-color:rgba(255,215,0,.3); }
+  .manual-block h3 { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+  .manual-block h3 i { color:var(--accent); font-size:18px; }
+  .manual-block p, .manual-block li { font-size:14px; color:var(--muted); line-height:1.7; }
+  .manual-block ul { list-style:none; padding:0; }
+  .manual-block li { padding:4px 0; padding-left:18px; position:relative; }
+  .manual-block li::before { content:''; position:absolute; left:0; top:12px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+  .manual-block .highlight { color:var(--fg); font-weight:600; }
+  .manual-block .val { color:var(--accent); font-weight:700; font-family:'Rajdhani',sans-serif; }
+
+  .piece-legend-row { display:flex; gap:24px; flex-wrap:wrap; margin-top:8px; }
+  .piece-legend-item { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+  .piece-box { width:32px; height:32px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; }
+
+  /* ── SCORING ── */
+  .scoring-section { gap:40px; flex-direction:column; }
+  .score-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; width:100%; }
+  .score-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:32px 24px; text-align:center; position:relative; overflow:hidden; transition:all .35s; }
+  .score-card:hover { transform:translateY(-6px); box-shadow:0 16px 50px rgba(0,0,0,.3); }
+  .score-card .score-value { font-family:'Rajdhani',sans-serif; font-size:56px; font-weight:700; line-height:1; margin-bottom:4px; }
+  .score-card .score-label { font-size:14px; font-weight:600; margin-bottom:8px; }
+  .score-card .score-desc { font-size:12px; color:var(--muted); }
+  .score-card .score-bg-icon { position:absolute; right:-10px; bottom:-10px; font-size:80px; opacity:.04; }
+  .sc1 { --card-accent:var(--valid); } .sc1 .score-value { color:var(--valid); }
+  .sc2 { --card-accent:var(--ai); } .sc2 .score-value { color:var(--ai); }
+  .sc3 { --card-accent:var(--accent); } .sc3 .score-value { color:var(--accent); }
+
+  /* ── TOOLS ── */
+  .tools-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; width:100%; max-width:700px; margin-top:32px; }
+  .tool-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:24px; display:flex; align-items:flex-start; gap:16px; transition:all .35s; }
+  .tool-card:hover { border-color:var(--accent); transform:translateY(-3px); box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .tool-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .tool-info h4 { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:17px; margin-bottom:4px; }
+  .tool-info p { font-size:12px; color:var(--muted); line-height:1.5; }
+  .tool-info .tool-ver { font-size:11px; color:var(--accent); font-weight:600; margin-top:4px; }
+
+  /* ── TECH ── */
+  .tech-section { gap:50px; }
+  .tech-left { flex:1; }
+  .tech-right { flex:1; }
+  .tech-stack { display:flex; flex-direction:column; gap:14px; margin-top:30px; }
+  .tech-item { display:flex; align-items:center; gap:14px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px 20px; transition:all .3s; }
+  .tech-item:hover { border-color:var(--accent); background:var(--accent-dim); transform:translateX(6px); }
+  .tech-item .tech-icon { width:40px; height:40px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .tech-item .tech-info h4 { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:15px; }
+  .tech-item .tech-info p { font-size:12px; color:var(--muted); }
+
+  .minimax-vis { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:30px; position:relative; overflow:hidden; }
+  .minimax-vis::after { content:''; position:absolute; top:-50%; right:-50%; width:200%; height:200%; background:radial-gradient(circle,rgba(255,215,0,.03) 0%,transparent 60%); pointer-events:none; }
+  .tree-level { display:flex; justify-content:center; gap:30px; margin-bottom:24px; position:relative; }
+  .tree-level:last-child { margin-bottom:0; }
+  .tree-node { width:52px; height:52px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; }
+  .tree-node.max-node { background:rgba(255,82,82,.15); border:2px solid var(--ai); color:var(--ai); }
+  .tree-node.min-node { background:rgba(68,138,255,.15); border:2px solid var(--human); color:var(--human); }
+  .tree-node.leaf { background:rgba(255,215,0,.1); border:2px solid rgba(255,215,0,.4); color:var(--accent); font-size:14px; }
+  .tree-label { text-align:center; font-size:11px; color:var(--muted); margin-top:6px; font-weight:600; letter-spacing:1px; }
+  .depth-info { display:flex; gap:20px; justify-content:center; margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+  .depth-stat { text-align:center; }
+  .depth-stat .val { font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; color:var(--accent); }
+  .depth-stat .lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+
+  /* ── FEATURES ── */
+  .features-section { gap:40px; flex-direction:column; }
+  .feature-showcase { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; width:100%; }
+  .feature-block { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:28px; text-align:center; transition:all .4s; position:relative; overflow:hidden; }
+  .feature-block:hover { transform:translateY(-6px); box-shadow:0 20px 60px rgba(0,0,0,.3); }
+  .feature-block .f-icon { font-size:40px; margin-bottom:16px; display:block; }
+  .feature-block h3 { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; margin-bottom:10px; }
+  .feature-block p { font-size:13px; color:var(--muted); line-height:1.6; }
+  .feature-block .f-glow { position:absolute; width:120px; height:120px; border-radius:50%; filter:blur(50px); top:-30px; left:50%; transform:translateX(-50%); opacity:0; transition:opacity .4s; }
+  .feature-block:hover .f-glow { opacity:1; }
+
+  /* ── THANK YOU ── */
+  .thankyou-section { flex-direction:column; text-align:center; gap:24px; justify-content:center; min-height:100vh; }
+  .thankyou-big { font-family:'Rajdhani',sans-serif; font-size:clamp(56px,10vw,120px); font-weight:700; line-height:1; letter-spacing:-3px; }
+  .thankyou-big .ty-thank { color:var(--accent); }
+  .thankyou-big .ty-you { color:var(--fg); }
+  .thankyou-sub { color:var(--muted); font-size:18px; font-weight:300; }
+  .ty-dev-card {
+    display:inline-flex; align-items:center; gap:16px;
+    background:var(--card); border:1px solid var(--border); border-radius:14px;
+    padding:20px 36px; transition:all .35s; position:relative; overflow:hidden;
+  }
+  .ty-dev-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent); opacity:.7; }
+  .ty-dev-card:hover { border-color:var(--accent); transform:translateY(-4px); box-shadow:0 12px 40px rgba(0,0,0,.3); }
+  .ty-dev-avatar {
+    width:48px; height:48px; border-radius:50%;
+    background:linear-gradient(135deg, var(--human), var(--accent));
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; color:#000;
+  }
+  .ty-dev-info { text-align:left; }
+  .ty-dev-label { font-size:10px; color:var(--accent); font-weight:600; text-transform:uppercase; letter-spacing:2px; }
+  .ty-dev-name { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; margin-top:2px; }
+  .ty-footer-line { width:60px; height:2px; background:var(--accent); border-radius:2px; margin:0 auto 12px; }
+  .ty-footer-text { color:var(--border); font-size:12px; }
+
+  #particles { position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+  .reveal { opacity:0; transform:translateY(40px); transition:all .8s cubic-bezier(.16,1,.3,1); }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+
+  @media (max-width:900px) {
+    .showcase { flex-direction:column; gap:40px; }
+    .rules-grid { grid-template-columns:1fr 1fr; }
+    .score-cards { grid-template-columns:1fr; max-width:400px; margin:0 auto; }
+    .feature-showcase { grid-template-columns:1fr; max-width:400px; margin:0 auto; }
+    .tech-section { flex-direction:column; gap:30px; }
+    .tools-grid { grid-template-columns:1fr; max-width:400px; margin:32px auto 0; }
+    .board { grid-template-columns:repeat(6,46px); grid-template-rows:repeat(6,46px); }
+    .cell { width:46px; height:46px; font-size:22px; }
+    .watermark-text { font-size:36px; }
+  }
+  @media (max-width:600px) {
+    .rules-grid { grid-template-columns:1fr; }
+    .board { grid-template-columns:repeat(6,40px); grid-template-rows:repeat(6,40px); gap:3px; }
+    .cell { width:40px; height:40px; font-size:18px; }
+    .watermark-text { font-size:28px; letter-spacing:6px; }
+    .watermark-row { gap:60px; }
+    .watermark-inner { gap:60px; }
+  }
+  @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+</style>
+</head>
+<body>
+
+<!-- ═══ WATERMARK ═══ -->
+<div class="watermark" aria-hidden="true">
+  <div class="watermark-inner" id="watermarkInner"></div>
+</div>
+
+<canvas id="particles"></canvas>
+<div class="bg-grid"></div>
+<div class="bg-glow g1"></div>
+<div class="bg-glow g2"></div>
+<div class="bg-glow g3"></div>
+
+<div class="slide-container">
+
+  <!-- ═══════════ FRONT ═══════════ -->
+  <section class="front-slide" id="front">
+    <div class="front-institution">Department of Computer Science & Engineering</div>
+    <div class="front-title">
+      <span class="wb">Battle</span>
+      <span class="wk"> Kono </span>
+      <span class="wa">AI</span>
+    </div>
+    <p class="front-subtitle">A strategic board game where human intuition clashes with machine intelligence</p>
+    <div class="front-dev">
+      <div class="front-dev-card">
+        <div class="front-dev-avatar">K</div>
+        <div class="front-dev-info">
+          <div class="front-dev-name">MD Kafiul Hasan</div>
+          <div class="front-dev-role">Developed by</div>
+        </div>
+      </div>
+    </div>
+    <div class="front-divider"></div>
+    <div class="scroll-hint">
+      <span>Scroll to explore</span>
+      <i class="fas fa-chevron-down"></i>
+    </div>
+  </section>
+
+  <!-- ═══════════ HERO ═══════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-badge"><i class="fas fa-chess"></i> Academic Project</div>
+    <h1>
+      <span class="word-battle">Battle</span>
+      <span class="word-kono"> Kono </span>
+      <span class="word-ai">AI</span>
+    </h1>
+    <p class="hero-sub">Human vs Machine on a 6x6 battlefield — strategy, captures, and a race to 70 points</p>
+    <div class="hero-tags">
+      <div class="hero-tag"><i class="fab fa-python" style="color:#ffd700"></i> Python / Tkinter</div>
+      <div class="hero-tag"><i class="fas fa-brain" style="color:#ff5252"></i> Minimax Algorithm</div>
+      <div class="hero-tag"><i class="fas fa-chess-board" style="color:#448aff"></i> 6x6 Strategy Game</div>
+      <div class="hero-tag"><i class="fas fa-trophy" style="color:#00e676"></i> 70 Point Win</div>
+    </div>
+    <div class="scroll-hint">
+      <span>Scroll to explore</span>
+      <i class="fas fa-chevron-down"></i>
+    </div>
+  </section>
+
+  <!-- ═══════════ TOOLS ═══════════ -->
+  <section class="col-section" id="tools">
+    <div class="reveal" style="text-align:center;">
+      <div class="section-label">Development Stack</div>
+      <div class="section-title">Tools & Technologies</div>
+      <p class="section-desc" style="margin:0 auto;">Everything used to build Battle Kono AI</p>
+    </div>
+    <div class="tools-grid reveal" style="transition-delay:.15s;">
+      <div class="tool-card">
+        <div class="tool-icon" style="background:rgba(55,118,171,.15);color:#3776ab;"><i class="fab fa-python"></i></div>
+        <div class="tool-info"><h4>Python</h4><p>Core programming language for game logic, AI engine, and GUI</p><div class="tool-ver">Python 3.x</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:rgba(255,215,0,.1);color:var(--accent);"><i class="fas fa-desktop"></i></div>
+        <div class="tool-info"><h4>Tkinter</h4><p>Built-in Python GUI toolkit for the board, buttons, labels, and timer</p><div class="tool-ver">tkinter (standard library)</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:rgba(255,82,82,.12);color:var(--ai);"><i class="fas fa-brain"></i></div>
+        <div class="tool-info"><h4>Minimax Algorithm</h4><p>Adversarial search for optimal AI decision-making with depth-limited search</p><div class="tool-ver">Depth = 2</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:rgba(0,230,118,.1);color:var(--valid);"><i class="fas fa-copy"></i></div>
+        <div class="tool-info"><h4>copy (deepcopy)</h4><p>Simulating board states without mutating the actual game board</p><div class="tool-ver">import copy</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:rgba(224,64,251,.1);color:#e040fb;"><i class="fas fa-square-root-alt"></i></div>
+        <div class="tool-info"><h4>math Module</h4><p>Infinity constants (math.inf) for Minimax initial score comparisons</p><div class="tool-ver">import math</div></div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon" style="background:rgba(68,138,255,.12);color:var(--human);"><i class="fas fa-comment-dots"></i></div>
+        <div class="tool-info"><h4>messagebox</h4><p>Tkinter popup dialogs for game-over results and winner announcements</p><div class="tool-ver">tkinter.messagebox</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ GAME SHOWCASE ═══════════ -->
+  <section class="showcase" id="showcase">
+    <div class="showcase-left reveal">
+      <div class="section-label">Game Interface</div>
+      <div class="section-title">The Battlefield</div>
+      <p class="section-desc">A dark-themed 6x6 grid where blue triangles (Human) face off against red triangles (AI). Click to select, click to move — simple controls, deep strategy.</p>
+      <div style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:var(--selected);display:flex;align-items:center;justify-content:center;font-size:12px;color:#000;font-weight:700;">▲</div>
+          <span style="font-size:13px;color:var(--muted);">Gold highlight — your selected piece</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:var(--valid);display:flex;align-items:center;justify-content:center;font-size:11px;color:#000;font-weight:700;">●</div>
+          <span style="font-size:13px;color:var(--muted);">Green highlight — valid move destinations</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:var(--ai-bg);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ai);">▼</div>
+          <span style="font-size:13px;color:var(--muted);">Red triangle — AI opponent pieces</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:var(--human-bg);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--human);">▲</div>
+          <span style="font-size:13px;color:var(--muted);">Blue triangle — your pieces (Human)</span>
+        </div>
+      </div>
+    </div>
+    <div class="showcase-right reveal" style="transition-delay:.15s;">
+      <div class="board-wrapper">
+        <div class="board-header"><span>Battle Kono AI — Live Preview</span></div>
+        <div class="board" id="demoBoard"></div>
+        <div class="board-footer">
+          <div class="board-score"><span class="hs">Human: 70</span> &nbsp;|&nbsp; <span class="as">AI: 57</span></div>
+          <div class="board-timer">⏱ 29s</div>
+        </div>
+        <div class="board-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--selected)"></div> Selected</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--valid)"></div> Valid Move</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--human)"></div> Human</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--ai)"></div> AI</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ GAME MANUAL ═══════════ -->
+  <section class="col-section" id="manual">
+    <div class="reveal" style="text-align:center;">
+      <div class="section-label">Complete Reference</div>
+      <div class="section-title">Game Manual</div>
+      <p class="section-desc" style="margin:0 auto;">Everything you need to know — rules, scoring, and special features</p>
+    </div>
+    <div class="manual-container reveal" style="transition-delay:.15s;">
+      <div class="manual-block">
+        <h3><i class="fas fa-bullseye"></i> Objective</h3>
+        <p>Be the first player to reach <span class="val">70 points</span> by moving your pieces across the board, capturing enemy pieces, and reaching the opponent's back row. The exact moment a player hits 70 points, the game ends immediately — instant win.</p>
+      </div>
+      <div class="manual-block">
+        <h3><i class="fas fa-chess-board"></i> The Board & Pieces</h3>
+        <p>The game is played on a <span class="highlight">6x6 grid</span>. Each player starts with 6 pieces:</p>
+        <div class="piece-legend-row" style="margin-top:12px;">
+          <div class="piece-legend-item">
+            <div class="piece-box" style="background:var(--human-bg);color:var(--human);">▲</div>
+            <span>You (Human) — Blue Upward Triangles, starting at the <span class="highlight">bottom row</span></span>
+          </div>
+          <div class="piece-legend-item">
+            <div class="piece-box" style="background:var(--ai-bg);color:var(--ai);">▼</div>
+            <span>AI (Computer) — Red Downward Triangles, starting at the <span class="highlight">top row</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="manual-block">
+        <h3><i class="fas fa-arrows-alt"></i> How to Move</h3>
+        <ul>
+          <li>Click on one of your <span class="highlight">blue pieces</span> to select it — it will highlight in <span style="color:var(--accent);font-weight:600;">Gold</span></li>
+          <li>Valid move destinations will highlight in <span style="color:var(--valid);font-weight:600;">Green</span></li>
+          <li>You can move <span class="highlight">one square orthogonally</span> (Up, Down, Left, Right) into an empty space</li>
+          <li><span class="highlight">Capturing:</span> Jump over an adjacent enemy piece if the space directly behind them is empty. The enemy piece is removed from the board</li>
+          <li>Click the same piece again to <span class="highlight">deselect</span>, or click another blue piece to switch selection</li>
+        </ul>
+      </div>
+      <div class="manual-block">
+        <h3><i class="fas fa-star"></i> Scoring System</h3>
+        <ul>
+          <li><span class="val">+1 Point</span> — For making a standard move to an empty adjacent square</li>
+          <li><span class="val">+2 Points</span> — For capturing an enemy piece by jumping over it</li>
+          <li><span class="val">+5 Points</span> — For reaching the opponent's absolute back row (Row 0 for Human, Row 5 for AI)</li>
+        </ul>
+      </div>
+      <div class="manual-block">
+        <h3><i class="fas fa-magic"></i> Special Features</h3>
+        <ul>
+          <li><span class="highlight">30-Second Timer:</span> You have 30 seconds to make your move. If time runs out, your turn is automatically skipped. Timer turns red below 5 seconds</li>
+          <li><span class="highlight">Undo Button:</span> Click "Undo Move" to take back your last turn. This undoes both your move and the AI's response, and resets your timer. One undo per turn</li>
+          <li><span class="highlight">Instant Win:</span> The exact moment a player hits 70 points, the game ends immediately with a victory popup</li>
+          <li><span class="highlight">New Game:</span> Click "New Game" at any time to reset everything and start fresh</li>
+        </ul>
+      </div>
+      <div class="manual-block">
+        <h3><i class="fas fa-trophy"></i> Win Conditions</h3>
+        <ul>
+          <li>Reach <span class="val">70 points</span> before the AI — instant victory</li>
+          <li>Eliminate all AI pieces from the board</li>
+          <li>Leave the AI with zero valid moves on their turn</li>
+        </ul>
+        <p style="margin-top:10px;">If none of the above apply when the game ends naturally, the player with the <span class="highlight">higher score wins</span>. Equal scores result in a tie.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ CORE MECHANICS ═══════════ -->
+  <section class="col-section" id="rules">
+    <div class="reveal" style="text-align:center;">
+      <div class="section-label">Quick Reference</div>
+      <div class="section-title">Core Mechanics</div>
+      <p class="section-desc" style="margin:0 auto;">Master these six mechanics to dominate the board</p>
+    </div>
+    <div class="rules-grid reveal" style="transition-delay:.15s;">
+      <div class="rule-card" style="--card-accent:var(--human);">
+        <div class="rule-icon" style="background:rgba(68,138,255,.12);color:var(--human);"><i class="fas fa-arrows-alt"></i></div>
+        <h3>Orthogonal Movement</h3>
+        <p>Move one square in any cardinal direction — up, down, left, or right — into any adjacent empty space.</p>
+      </div>
+      <div class="rule-card" style="--card-accent:var(--ai);">
+        <div class="rule-icon" style="background:rgba(255,82,82,.12);color:var(--ai);"><i class="fas fa-crosshairs"></i></div>
+        <h3>Jump Captures</h3>
+        <p>Leap over an adjacent enemy piece if the space behind them is empty. The enemy is removed — +2 points.</p>
+      </div>
+      <div class="rule-card" style="--card-accent:var(--accent);">
+        <div class="rule-icon" style="background:rgba(255,215,0,.12);color:var(--accent);"><i class="fas fa-flag-checkered"></i></div>
+        <h3>Back Row Bonus</h3>
+        <p>Get any piece to the opponent's absolute last row for a massive +5 point bonus.</p>
+      </div>
+      <div class="rule-card" style="--card-accent:var(--valid);">
+        <div class="rule-icon" style="background:rgba(0,230,118,.12);color:var(--valid);"><i class="fas fa-mouse-pointer"></i></div>
+        <h3>Click to Play</h3>
+        <p>Click a blue piece to select (gold). Valid moves glow green. Click destination to move.</p>
+      </div>
+      <div class="rule-card" style="--card-accent:#ff9800;">
+        <div class="rule-icon" style="background:rgba(255,152,0,.12);color:#ff9800;"><i class="fas fa-trophy"></i></div>
+        <h3>Win at 70 Points</h3>
+        <p>The moment any player reaches 70 points, the game ends instantly. Every point matters.</p>
+      </div>
+      <div class="rule-card" style="--card-accent:#e040fb;">
+        <div class="rule-icon" style="background:rgba(224,64,251,.12);color:#e040fb;"><i class="fas fa-skull-crossbones"></i></div>
+        <h3>Elimination Wins</h3>
+        <p>If all of one player's pieces are captured, or they have zero valid moves, the game ends.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ SCORING ═══════════ -->
+  <section class="scoring-section col-section" id="scoring">
+    <div class="reveal" style="text-align:center;">
+      <div class="section-label">Point System</div>
+      <div class="section-title">Every Move Counts</div>
+      <p class="section-desc" style="margin:0 auto;">Three ways to score — strategy is choosing which to pursue</p>
+    </div>
+    <div class="score-cards reveal" style="transition-delay:.15s;">
+      <div class="score-card sc1">
+        <div class="score-bg-icon"><i class="fas fa-shoe-prints"></i></div>
+        <div class="score-value">+1</div>
+        <div class="score-label" style="color:var(--valid);">Standard Move</div>
+        <div class="score-desc">Simply moving to an adjacent empty square. Consistent, safe progress.</div>
+      </div>
+      <div class="score-card sc2">
+        <div class="score-bg-icon"><i class="fas fa-crosshairs"></i></div>
+        <div class="score-value">+2</div>
+        <div class="score-label" style="color:var(--ai);">Capture</div>
+        <div class="score-desc">Jump over an enemy piece to remove it. Aggressive, high-reward plays.</div>
+      </div>
+      <div class="score-card sc3">
+        <div class="score-bg-icon"><i class="fas fa-crown"></i></div>
+        <div class="score-value">+5</div>
+        <div class="score-label" style="color:var(--accent);">Back Row Reach</div>
+        <div class="score-desc">Reach the opponent's last row. The highest-value single action in the game.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ AI TECH ═══════════ -->
+  <section class="tech-section" id="tech">
+    <div class="tech-left reveal">
+      <div class="section-label">Under the Hood</div>
+      <div class="section-title">Minimax AI Engine</div>
+      <p class="section-desc">The AI uses the classic Minimax algorithm with depth 2 to evaluate all possible move sequences, choosing the path that maximizes its advantage.</p>
+      <div class="tech-stack">
+        <div class="tech-item">
+          <div class="tech-icon" style="background:rgba(255,82,82,.12);color:var(--ai);"><i class="fas fa-project-diagram"></i></div>
+          <div class="tech-info"><h4>Minimax Search (Depth 2)</h4><p>Evaluates all possible two-move sequences — AI move + Human response</p></div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon" style="background:rgba(255,215,0,.12);color:var(--accent);"><i class="fas fa-balance-scale"></i></div>
+          <div class="tech-info"><h4>Positional Evaluation</h4><p>Score = (AI score - Human score) + row advancement bonus for each piece</p></div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon" style="background:rgba(0,230,118,.12);color:var(--valid);"><i class="fas fa-copy"></i></div>
+          <div class="tech-info"><h4>Deep Copy Simulation</h4><p>Each branch uses copy.deepcopy to simulate moves without altering the real board</p></div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-icon" style="background:rgba(68,138,255,.12);color:var(--human);"><i class="fab fa-python"></i></div>
+          <div class="tech-info"><h4>Pure Python + Tkinter</h4><p>No external game libraries — just tkinter widgets and standard library modules</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="tech-right reveal" style="transition-delay:.2s;">
+      <div class="minimax-vis">
+        <div style="text-align:center;margin-bottom:20px;">
+          <div class="section-label" style="margin-bottom:4px;">Decision Tree</div>
+          <div class="section-title" style="font-size:24px;margin-bottom:0;">How AI Thinks</div>
+        </div>
+        <div class="tree-level">
+          <div class="tree-node max-node"><i class="fas fa-robot" style="font-size:18px;"></i></div>
+        </div>
+        <div style="display:flex;justify-content:center;margin-bottom:4px;"><div style="width:1px;height:20px;background:var(--border);"></div></div>
+        <div class="tree-level">
+          <div class="tree-node min-node">H1</div>
+          <div class="tree-node min-node">H2</div>
+          <div class="tree-node min-node">H3</div>
+        </div>
+        <div style="display:flex;justify-content:space-around;padding:0 24px;margin-bottom:4px;">
+          <div style="width:1px;height:20px;background:var(--border);"></div>
+          <div style="width:1px;height:20px;background:var(--border);"></div>
+          <div style="width:1px;height:20px;background:var(--border);"></div>
+        </div>
+        <div class="tree-level">
+          <div class="tree-node leaf">+3</div>
+          <div class="tree-node leaf">-1</div>
+          <div class="tree-node leaf">+5</div>
+          <div class="tree-node leaf">+1</div>
+          <div class="tree-node leaf">-2</div>
+          <div class="tree-node leaf">+4</div>
+        </div>
+        <div style="display:flex;justify-content:space-around;padding:0 24px;">
+          <div style="width:1px;height:16px;background:var(--border);"></div>
+          <div style="width:1px;height:16px;background:var(--border);"></div>
+          <div style="width:1px;height:16px;background:var(--border);"></div>
+          <div style="width:1px;height:16px;background:var(--border);"></div>
+          <div style="width:1px;height:16px;background:var(--border);"></div>
+          <div style="width:1px;height:16px;background:var(--border);"></div>
+        </div>
+        <div class="tree-level" style="margin-top:4px;">
+          <div style="text-align:center;">
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:var(--human);background:rgba(68,138,255,.1);padding:4px 12px;border-radius:6px;border:1px solid rgba(68,138,255,.3);">min(-1)=-1</div>
+            <div class="tree-label">Human picks lowest</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:var(--human);background:rgba(68,138,255,.1);padding:4px 12px;border-radius:6px;border:1px solid rgba(68,138,255,.3);">min(-2)=-2</div>
+            <div class="tree-label">Human picks lowest</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;color:var(--human);background:rgba(68,138,255,.1);padding:4px 12px;border-radius:6px;border:1px solid rgba(68,138,255,.3);">min(+1)=+1</div>
+            <div class="tree-label">Human picks lowest</div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:20px;padding:12px;border-radius:10px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2);">
+          <span style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:var(--accent);">AI chooses max(-1, -2, +1) = +1</span>
+          <div class="tree-label" style="margin-top:4px;">AI picks the move leading to the best worst-case</div>
+        </div>
+        <div class="depth-info">
+          <div class="depth-stat"><div class="val">2</div><div class="lbl">Search Depth</div></div>
+          <div class="depth-stat"><div class="val">~48</div><div class="lbl">Max Moves</div></div>
+          <div class="depth-stat"><div class="val">O(n<sup>d</sup>)</div><div class="lbl">Complexity</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ SPECIAL FEATURES ═══════════ -->
+  <section class="features-section col-section" id="features">
+    <div class="reveal" style="text-align:center;">
+      <div class="section-label">Special Features</div>
+      <div class="section-title">Beyond Basic Gameplay</div>
+      <p class="section-desc" style="margin:0 auto;">Quality-of-life features that elevate the experience</p>
+    </div>
+    <div class="feature-showcase reveal" style="transition-delay:.15s;">
+      <div class="feature-block">
+        <div class="f-glow" style="background:rgba(255,82,82,.2);"></div>
+        <span class="f-icon" style="color:var(--ai);"><i class="fas fa-hourglass-half"></i></span>
+        <h3>30-Second Turn Timer</h3>
+        <p>A countdown timer forces quick decisions. When time hits zero, your turn is automatically skipped. Turns red below 5 seconds for urgency.</p>
+      </div>
+      <div class="feature-block">
+        <div class="f-glow" style="background:rgba(68,138,255,.2);"></div>
+        <span class="f-icon" style="color:var(--human);"><i class="fas fa-undo-alt"></i></span>
+        <h3>Undo Move</h3>
+        <p>Made a bad move? Hit "Undo Move" to revert both your move and the AI's response. The timer resets too. One undo per turn keeps it fair.</p>
+      </div>
+      <div class="feature-block">
+        <div class="f-glow" style="background:rgba(255,215,0,.2);"></div>
+        <span class="f-icon" style="color:var(--accent);"><i class="fas fa-bolt"></i></span>
+        <h3>Instant Win Trigger</h3>
+        <p>The moment any player hits 70 points, the game ends immediately with a victory popup. No extra turns, no delays — instant gratification.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ THANK YOU ═══════════ -->
+  <section class="thankyou-section" id="thankyou">
+    <div class="reveal">
+      <div class="section-label" style="margin-bottom:12px;">Presentation Complete</div>
+      <div class="thankyou-big">
+        <span class="ty-thank">Thank</span><span class="ty-you"> You</span>
+      </div>
+      <p class="thankyou-sub">For your time and attention</p>
+    </div>
+    <div class="reveal" style="transition-delay:.15s;">
+      <div class="ty-dev-card">
+        <div class="ty-dev-avatar">K</div>
+        <div class="ty-dev-info">
+          <div class="ty-dev-label">Developed by</div>
+          <div class="ty-dev-name">MD Kafiul Hasan</div>
+        </div>
+      </div>
+    </div>
+    <div class="reveal" style="transition-delay:.3s; margin-top:20px;">
+      <div class="ty-footer-line"></div>
+      <p class="ty-footer-text">Battle Kono AI — Human vs Machine Intelligence</p>
+      <p class="ty-footer-text" style="margin-top:4px;">Built with Python &middot; Tkinter &middot; Minimax Algorithm</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ── Generate watermark pattern ── */
+(function(){
+  var container = document.getElementById('watermarkInner');
+  var name = 'MD KAFIUL HASAN';
+  /* Need enough rows to cover the rotated area, plus some extra */
+  var rowsNeeded = 30;
+  var itemsPerRow = 8;
+  for(var r = 0; r < rowsNeeded; r++){
+    var row = document.createElement('div');
+    row.className = 'watermark-row';
+    /* Offset odd rows for a brick-like pattern */
+    if(r % 2 === 1) row.style.marginLeft = '60px';
+    for(var c = 0; c < itemsPerRow; c++){
+      var span = document.createElement('span');
+      span.className = 'watermark-text';
+      span.textContent = name;
+      row.appendChild(span);
+    }
+    container.appendChild(row);
+  }
+})();
+
+/* ── Demo board ── */
+(function(){
+  var board=document.getElementById('demoBoard');
+  var layout=[
+    ['empty','empty','empty','empty','selected-cell','empty'],
+    ['empty','empty','ai-piece','empty','valid-cell','empty'],
+    ['empty','human','empty','empty','empty','ai-piece'],
+    ['empty','empty','empty','human','empty','empty'],
+    ['empty','ai-piece','empty','empty','empty','human'],
+    ['human','empty','human','empty','empty','human'],
+  ];
+  var symbols={'human':'▲','ai-piece':'▼','selected-cell':'▲','valid-cell':'','empty':''};
+  layout.forEach(function(row){row.forEach(function(ct){
+    var c=document.createElement('div');c.className='cell '+ct;
+    c.textContent=symbols[ct]||'';
+    if(ct==='valid-cell')c.innerHTML='<i class="fas fa-circle" style="font-size:10px;"></i>';
+    board.appendChild(c);
+  });});
+})();
+
+/* ── Particles ── */
+(function(){
+  var cv=document.getElementById('particles'),ctx=cv.getContext('2d');
+  var w,h,ps=[],N=45;
+  function rs(){w=cv.width=window.innerWidth;h=cv.height=window.innerHeight;}rs();
+  window.addEventListener('resize',rs);
+  var cols=['rgba(255,215,0,','rgba(68,138,255,','rgba(255,82,82,','rgba(0,230,118,'];
+  for(var i=0;i<N;i++)ps.push({x:Math.random()*w,y:Math.random()*h,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*2+.5,col:cols[Math.floor(Math.random()*cols.length)],a:Math.random()*.35+.1});
+  function anim(){
+    ctx.clearRect(0,0,w,h);
+    for(var i=0;i<ps.length;i++){
+      var p=ps[i];p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=w;if(p.x>w)p.x=0;if(p.y<0)p.y=h;if(p.y>h)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.5,p.r),0,Math.PI*2);
+      ctx.fillStyle=p.col+p.a+')';ctx.fill();
+    }
+    for(var i=0;i<ps.length;i++)for(var j=i+1;j<ps.length;j++){
+      var dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<140){ctx.beginPath();ctx.moveTo(ps[i].x,ps[i].y);ctx.lineTo(ps[j].x,ps[j].y);
+      ctx.strokeStyle='rgba(255,215,0,'+(1-d/140)*.05+')';ctx.lineWidth=.5;ctx.stroke();}
+    }
+    requestAnimationFrame(anim);
+  }
+  anim();
+})();
+
+/* ── Scroll reveal ── */
+(function(){
+  var els=document.querySelectorAll('.reveal');
+  var obs=new IntersectionObserver(function(e){
+    e.forEach(function(en){if(en.isIntersecting)en.target.classList.add('visible');});
+  },{threshold:.12,rootMargin:'0px 0px -30px 0px'});
+  els.forEach(function(el){obs.observe(el);});
+})();
+</script>
+</body>
+</html>
